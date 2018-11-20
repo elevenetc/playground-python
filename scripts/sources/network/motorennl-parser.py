@@ -10,7 +10,7 @@ print(session_id)
 print(requests.get(base_url, params={'params[br]': '4', 'params[a]': 'check'}))
 
 # select model
-print(requests.get(base_url, params={'params[br]': '4', 'params[a]': 'check'}, headers={'PHPSESSID': session_id}))
+print(requests.get(base_url, params={'params[ty]': 'g528', 'params[a]': 'check'}, headers={'PHPSESSID': session_id}))
 
 # get list
 result = requests.get(
