@@ -78,11 +78,11 @@ def parse(mark, model):
             img = get_image_url(item)
 
             price = parse_price(raw_price)
-            year_and_mileage = year_and_mileage.split(' ')
+            year_and_mileage_split = year_and_mileage.split(' ')
 
-            year = year_and_mileage[0].replace(',', '')
-            mileage = year_and_mileage[1]
-            mileage_measure = year_and_mileage[2]
+            year = year_and_mileage_split[0].replace(',', '')
+            mileage = year_and_mileage_split[1]
+            mileage_measure = year_and_mileage_split[2]
 
             if mileage_measure == 'Mls':
                 mileage = int(mileage) * 1.6
