@@ -5,61 +5,130 @@ base_url = 'https://www.motoroccasion.nl/motoren'
 mz_url = 'https://www.motoroccasion.nl/mz.php'
 fs_url = 'https://www.motoroccasion.nl/fs.php'
 
-print('start')
+# r1150gs
+# mark = '4'
+# model = 'g528'
+# vfr
+mark = '18'
+model = 'g129'
 
-response = requests.get(base_url)
-session_cookie = 'PHPSESSID=' + response.cookies.get_dict()['PHPSESSID']
-print(response.cookies)
-print(session_cookie)
 
-# select mark
-print(requests.get(mz_url, params={'params[br]': '4', 'params[a]': 'check'}, headers={'Cookie': session_cookie}))
-print(requests.get(fs_url, params={'s': 'mz'}, headers={'Cookie': session_cookie}))
-print(requests.get(mz_url, params={'params[nr]': 'true'}, headers={'Cookie': session_cookie}))
+def parse(mark, model):
+    print('start')
 
-# select model
-print(requests.get(mz_url, params={'params[ty]': 'g528', 'params[a]': 'check'}, headers={'Cookie': session_cookie}))
-print(requests.get(fs_url, params={'s': 'mz', }, headers={'Cookie': session_cookie}))
+    response = requests.get(base_url)
+    session_cookie = 'PHPSESSID=' + response.cookies.get_dict()['PHPSESSID']
+    print(response.cookies)
+    print(session_cookie)
 
-result = requests.get(mz_url, params={'params[nr]': 'true'}, headers={'Cookie': session_cookie})
-print(result.status_code)
+    # select mark
+    print(requests.get(mz_url, params={'params[br]': mark, 'params[a]': 'check'}, headers={'Cookie': session_cookie}))
+    print(requests.get(fs_url, params={'s': 'mz'}, headers={'Cookie': session_cookie}))
+    print(requests.get(mz_url, params={'params[nr]': 'true'}, headers={'Cookie': session_cookie}))
 
-parser = BeautifulSoup(result.content, 'html.parser')
+    # select model
+    print(requests.get(mz_url, params={'params[ty]': model, 'params[a]': 'check'}, headers={'Cookie': session_cookie}))
+    print(requests.get(fs_url, params={'s': 'mz', }, headers={'Cookie': session_cookie}))
 
-items = parser.findAll("div", {"class": "table line-tile"})
+    ok = True
+    result = []
 
-if len(items) == 0:
-    print('no moto')
-else:
-    print('found ' + str(len(items)) + ' motos')
+    page_size = 50
+    page = 0
+    first_id_of_page = ''
 
-    motos = []
+    while ok:
 
-    for item in items:
-        price = str(item.find("span", {"class": "line-tile-price"}).contents[0])
-        year_and_mileage = str(item.find("div", {"class": "line-tile-yearmls"}).contents[0])
-        url = item.next.next.next.next.next['href']
-        img = item.next.next.next.next.next.next['src']
+        group_response = requests.get(mz_url, params={
+            'params[nr]': 'true',
+            'params[order]': 'default',
+            'params[max]': page_size,
+            'params[layout]': 'line',
+            'params[every]': '10,6',
+            'params[selectie]': 'all',
+            'params[singleSelect]': '1',
+            'params[a]': 'check',
 
-        price = price.replace('€ ', '').replace(',-', '').replace('.', '')
-        year_and_mileage = year_and_mileage.split(' ')
+            'params[s]': page,
+            'params[c]': page_size,
+        }, headers={'Cookie': session_cookie})
 
-        year = year_and_mileage[0].replace(',', '')
-        mileage = year_and_mileage[1]
-        mileage_measure = year_and_mileage[2]
+        print(group_response.status_code)
 
-        if mileage_measure == 'Mls':
-            mileage = int(mileage) * 1.6
+        parser = BeautifulSoup(group_response.content, 'html.parser')
 
-        motos.append({
-            'price': int(price),
-            'img': 'https://www.motoroccasion.nl/' + img,
-            'url': 'https://www.motoroccasion.nl/' + url,
-            'year': int(year),
-            'mileage': int(mileage)
-        })
+        items = parser.findAll("div", {"class": "table line-tile"})
 
-    print(str(motos))
+        if len(items) == 0:
+            break
+        else:
+            id = str(items[0].find('img', {'class': 'line-tile-photo'})['id']).split('-')[2]
+            if id == first_id_of_page:
+                break
+            else:
+                first_id_of_page = id
 
-# print(result)
-# print(result.content)
+        for item in items:
+
+            id = str(item.find('img', {'class': 'line-tile-photo'})['id']).split('-')[2]
+
+            raw_price = str(item.find("span", {"class": "line-tile-price"}).contents[0])
+            year_and_mileage = str(item.find("div", {"class": "line-tile-yearmls"}).contents[0])
+            url = get_url(item)
+            img = get_image_url(item)
+
+            price = parse_price(raw_price)
+            year_and_mileage = year_and_mileage.split(' ')
+
+            year = year_and_mileage[0].replace(',', '')
+            mileage = year_and_mileage[1]
+            mileage_measure = year_and_mileage[2]
+
+            if mileage_measure == 'Mls':
+                mileage = int(mileage) * 1.6
+
+            result.append({
+                'id': id,
+                'price': int(price),
+                'img': 'https://www.motoroccasion.nl/' + img,
+                'url': 'https://www.motoroccasion.nl/' + url,
+                'year': int(year),
+                'mileage': int(mileage)
+            })
+
+        page += page_size
+
+    print('found ' + str(len(result)) + ' motos')
+    print(str(result))
+
+
+def get_image_url(item):
+    try:
+        return item.next.next.next.next.next.next['src']
+    except Exception as e:
+        pass
+
+    return ''
+
+
+def get_url(item):
+    try:
+        return item.next.next.next.next.next['href']
+    except Exception as e:
+        pass
+
+    return ''
+
+
+def parse_price(raw_price):
+    price = raw_price.replace('€ ', '').replace(',-', '').replace('.', '')
+    result = -1
+    try:
+        result = int(price)
+    except Exception as e:
+        pass
+
+    return result
+
+
+parse(mark, model)
