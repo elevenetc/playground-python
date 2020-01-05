@@ -1,0 +1,52 @@
+GET http://127.0.0.1:5000/manufacturers
+
+> {%
+  var manufacturers = response.body;
+
+  for (var i = 0; i < manufacturers.length; i++) {
+    var manufacturer = manufacturers[i];
+    if(manufacturer['name'] === 'BMW') {
+      client.global.set('man-code', manufacturer['code']);
+      break;
+    }
+  }
+
+  client.assert(!client.global.get('man-code').isEmpty(), 'Not found BMW code');
+
+
+%}
+
+###
+
+GET http://127.0.0.1:5000/models/{{man-code}}
+
+> {%
+
+  var models = response.body;
+
+  client.assert(models.length > 0, "No models returned");
+
+  for (var i = 0; i < models.length; i++) {
+      var model = models[i];
+      if(model['name'] === 'R 1200 GS ADVENTURE') {
+          client.global.set('model-code', model['code']);
+          break;
+      }
+  }
+
+  client.assert(!client.global.get('model-code').isEmpty(), 'Not found R 1200 GS ADVENTURE code');
+
+%}
+
+###
+
+GET http://127.0.0.1:5000/motorcycles/{{man-code}}/{{model-code}}
+
+> {%
+
+  var motorcycles = response.body;
+
+  client.assert(motorcycles.length > 0, "No motorcycles returned");
+%}
+
+###

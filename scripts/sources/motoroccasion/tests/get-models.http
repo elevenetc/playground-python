@@ -1,0 +1,36 @@
+# For a quick start check out our HTTP Requests collection (Tools|HTTP Client|Open HTTP Requests Collection) or
+# paste cURL into the file and request will be converted to HTTP Request format.
+#
+# Following HTTP Request Live Templates are available:
+# * 'gtrp' and 'gtr' create a GET request with or without query parameters;
+# * 'ptr' and 'ptrp' create a POST request with a simple or parameter-like body;
+# * 'mptr' and 'fptr' create a POST request to submit a form with a text or file field (multipart/form-data);
+GET http://127.0.0.1:5000/manufacturers
+
+> {%
+client.test("Success", function() {
+  client.assert(response.status === 200, "Response is not 200");
+});
+
+client.test("Length", function() {
+  client.assert(response.body.length > 0, "Response is empty");
+});
+
+client.test("Contains BMW", function() {
+    var body = response.body;
+    var found = false;
+    for (var i = 0; i < body.length; i++) {
+        var manufacturer = body[i];
+       if(manufacturer['name'] === 'BMW' && !manufacturer['code'].isEmpty()){
+           found = true;
+           break
+       }
+    }
+    client.assert(found, "BMW manufacturer is not found");
+});
+
+ %}
+
+
+
+###
