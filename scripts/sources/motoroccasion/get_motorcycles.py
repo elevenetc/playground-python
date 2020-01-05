@@ -1,3 +1,4 @@
+# coding=utf-8
 import requests
 from bs4 import BeautifulSoup
 
@@ -5,15 +6,17 @@ base_url = 'https://www.motoroccasion.nl/motoren'
 mz_url = 'https://www.motoroccasion.nl/mz.php'
 fs_url = 'https://www.motoroccasion.nl/fs.php'
 
+
 # r1150gs
 # mark = '4'
 # model = 'g528'
 # vfr
-mark = '18'
-model = 'g129'
+
+# mark = '18'
+# model = 'g129'
 
 
-def parse(mark, model):
+def get_motorcycles(mark, model):
     print('start')
 
     response = requests.get(base_url)
@@ -22,12 +25,14 @@ def parse(mark, model):
     print(session_cookie)
 
     # select mark
-    print(requests.get(mz_url, params={'params[br]': mark, 'params[a]': 'check'}, headers={'Cookie': session_cookie}))
+    print(requests.get(mz_url, params={'params[br]': mark, 'params[a]': 'check'},
+                       headers={'Cookie': session_cookie}))
     print(requests.get(fs_url, params={'s': 'mz'}, headers={'Cookie': session_cookie}))
     print(requests.get(mz_url, params={'params[nr]': 'true'}, headers={'Cookie': session_cookie}))
 
     # select model
-    print(requests.get(mz_url, params={'params[ty]': model, 'params[a]': 'check'}, headers={'Cookie': session_cookie}))
+    print(requests.get(mz_url, params={'params[ty]': model, 'params[a]': 'check'},
+                       headers={'Cookie': session_cookie}))
     print(requests.get(fs_url, params={'s': 'mz', }, headers={'Cookie': session_cookie}))
 
     ok = True
@@ -72,7 +77,8 @@ def parse(mark, model):
 
             id = str(item.find('img', {'class': 'line-tile-photo'})['id']).split('-')[2]
 
-            raw_price = str(item.find("span", {"class": "line-tile-price"}).contents[0])
+            raw_price = str(
+                item.find("span", {"class": "line-tile-price"}).contents[0].encode('utf-8'))
             year_and_mileage = str(item.find("div", {"class": "line-tile-yearmls"}).contents[0])
             url = get_url(item)
             img = get_image_url(item)
@@ -99,7 +105,8 @@ def parse(mark, model):
         page += page_size
 
     print('found ' + str(len(result)) + ' motos')
-    print(str(result))
+    # print(str(result))
+    return result
 
 
 def get_image_url(item):
@@ -130,5 +137,4 @@ def parse_price(raw_price):
 
     return result
 
-
-parse(mark, model)
+# get_motorcycles(mark, model)

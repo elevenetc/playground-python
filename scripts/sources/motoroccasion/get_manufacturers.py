@@ -26,11 +26,11 @@ def get_manufacturers():
     for group in favourite_and_others:
         manufacturers = group.findAll('option')
         for manufacturer in manufacturers:
-            code = manufacturer['value']
-            name = manufacturer.contents[0]
+            code = str(manufacturer['value'])
+            name = str(manufacturer.contents[0])
             result.append({'code': code, 'name': name})
 
     return result
 
 
-print(get_manufacturers())
+# print(get_manufacturers())
