@@ -16,16 +16,14 @@ fs_url = 'https://www.motoroccasion.nl/fs.php'
 # model = 'g129'
 
 
-def get_motorcycles(mark, model):
-    print('start')
-
+def get_motorcycles(manufacturer, model):
     response = requests.get(base_url)
     session_cookie = 'PHPSESSID=' + response.cookies.get_dict()['PHPSESSID']
     print(response.cookies)
     print(session_cookie)
 
     # select mark
-    print(requests.get(mz_url, params={'params[br]': mark, 'params[a]': 'check'},
+    print(requests.get(mz_url, params={'params[br]': manufacturer, 'params[a]': 'check'},
                        headers={'Cookie': session_cookie}))
     print(requests.get(fs_url, params={'s': 'mz'}, headers={'Cookie': session_cookie}))
     print(requests.get(mz_url, params={'params[nr]': 'true'}, headers={'Cookie': session_cookie}))
@@ -99,13 +97,14 @@ def get_motorcycles(mark, model):
                 'img': 'https://www.motoroccasion.nl/' + img,
                 'url': 'https://www.motoroccasion.nl/' + url,
                 'year': int(year),
-                'mileage': int(mileage)
+                'mileage': int(mileage),
+                'manufacturer_code': manufacturer,
+                'model_code': model
             })
 
         page += page_size
 
     print('found ' + str(len(result)) + ' motos')
-    # print(str(result))
     return result
 
 
@@ -136,5 +135,3 @@ def parse_price(raw_price):
         pass
 
     return result
-
-# get_motorcycles(mark, model)
